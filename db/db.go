@@ -15,36 +15,35 @@ var (
 	DB *sqlx.DB
 )
 
-func NewDBConnection(connStr string) error {
-	conn, err := sqlx.Open("postgres", connStr)
+func NewDBConnection(connStr string) (*sqlx.DB, error) {
+	db, err := sqlx.Open("postgres", connStr)
 	if err != nil {
-		return err
+		return db, err
 	}
 
-	err = conn.Ping()
+	err = db.Ping()
 	if err != nil {
-		return err
+		return db, err
 	}
 
-	DB = conn
-	return migrateUp(DB)
+	return migrateUp(db)
 }
 
-func migrateUp(db *sqlx.DB) error {
+func migrateUp(db *sqlx.DB) (*sqlx.DB, error) {
 	db.Driver()
 	driver, err := postgres.WithInstance(db.DB, &postgres.Config{})
 	if err != nil {
-		return err
+		return db, err
 	}
 	m, err := migrator.NewWithDatabaseInstance(
 		fmt.Sprintf("file://%s", "./db/migrations"),
 		os.Getenv("POSTGRES_DB"), driver)
 
 	if err != nil {
-		return err
+		return db, err
 	}
 	if err := m.Up(); err != nil && err != migrator.ErrNoChange {
-		return err
+		return db, err
 	}
-	return nil
+	return db, nil
 }

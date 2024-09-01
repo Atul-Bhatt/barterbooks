@@ -5,28 +5,13 @@ import (
 	"os"
 
 	"barterbooks/db"
+	"barterbooks/router"
 
 	"github.com/joho/godotenv"
 )
 
-/*
-func init() {
-	godotenv.Load()
-
-
-	connStr := fmt.Sprintf(
-		"postgres://%s:%s@%s/%s?sslmode=disable",
-		conf.PostgresUser,
-		conf.PostgresPassword,
-		conf.PostgresHost,
-		conf.PostgresDB,
-	)
-
-	conf.PostgresURL = connStr
-}
-*/
-
 func main() {
+	// database connection
 	godotenv.Load()
 	connStr := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
@@ -37,9 +22,13 @@ func main() {
 		os.Getenv("POSTGRES_DB"),
 		os.Getenv("SSLMODE"),
 	)
-	fmt.Println(connStr)
-	err := db.NewDBConnection(connStr)
+
+	dbConn, err := db.NewDBConnection(connStr)
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	r := router.SetupRouter(dbConn)
+	// Listen and Server in 0.0.0.0:8080
+	r.Run(":8080")
 }
