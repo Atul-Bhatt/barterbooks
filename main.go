@@ -3,29 +3,16 @@ package main
 import (
 	"fmt"
 	"os"
-	"database/sql"
+
+	"barterbooks/db"
 
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 )
 
-type Config struct {
-	PostgresDB			string
-	PostgresUser		string
-	PostgresPassword	string
-	PostgresHost		string
-	PostgresURL			string
-}
-
-var conf Config
-
+/*
 func init() {
 	godotenv.Load()
 
-	conf.PostgresDB = os.Getenv("POSTGRES_DB")
-	conf.PostgresUser = os.Getenv("POSTGRES_USER")
-	conf.PostgresPassword = os.Getenv("POSTGRES_PASSWORD")
-	conf.PostgresHost = os.Getenv("POSTGRES_HOST")
 
 	connStr := fmt.Sprintf(
 		"postgres://%s:%s@%s/%s?sslmode=disable",
@@ -37,11 +24,22 @@ func init() {
 
 	conf.PostgresURL = connStr
 }
+*/
 
 func main() {
-	conn, err := sql.Open("postgres", conf.PostgresURL)
+	godotenv.Load()
+	connStr := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		os.Getenv("POSTGRES_HOST"),
+		os.Getenv("POSTGRES_PORT"),
+		os.Getenv("POSTGRES_USER"),
+		os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_DB"),
+		os.Getenv("SSLMODE"),
+	)
+	fmt.Println(connStr)
+	err := db.NewDBConnection(connStr)
 	if err != nil {
 		fmt.Println(err)
 	}
-	defer conn.Close()
 }
