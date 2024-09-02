@@ -19,18 +19,29 @@ func (r *BookRepository) Create(book model.Book) error {
 	return err
 }
 
-func (r *BookRepository) GetAll() ([]model.Book, error) {
+func (r *BookRepository) GetAllBooks() ([]model.Book, error) {
 	var books []model.Book
 	err := r.conn.Select(&books, "SELECT * FROM books")
 	return books, err
 }
 
-func (r *BookRepository) UpdateTitle(book model.Book) error {
-	_, err := r.conn.NamedExec("UPDATE books SET title = :title WHERE id = :id", book)
+func (r *BookRepository) GetBook(id string) (model.Book, error) {
+	var books model.Book
+	err := r.conn.Select(&books, "SELECT * FROM books where isbn = $1", id)
+	return books, err
+}
+
+func (r *BookRepository) UpdateBook(book model.Book, id string) error {
+	_, err := r.conn.Exec("UPDATE books SET title = $2, author = $3, isbn = $4 WHERE id = $1",
+		id,
+		book.Title,
+		book.Author,
+		book.ISBN,
+	)
 	return err
 }
 
-func (r *BookRepository) Delete(id int) error {
+func (r *BookRepository) DeleteBook(id string) error {
 	_, err := r.conn.Exec("DELETE FROM books WHERE id = $1", id)
 	return err
 }

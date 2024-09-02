@@ -3,70 +3,90 @@ package router
 import (
 	"net/http"
 
+	"barterbooks/model"
 	"barterbooks/repository"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 )
 
+var repo *repository.BookRepository
+
 func SetupRouter(db *sqlx.DB) *gin.Engine {
 	r := gin.Default()
-	repo := repository.NewBookRepository(db)
+	repo = repository.NewBookRepository(db)
 
-	r.GET("/health_check", func(c *gin.Context) {
-		c.String(http.StatusOK, "hello from bookbarter!")
-	})
-
-	r.GET("/books/", func(c *gin.Context) {
-		books, err := repo.GetAll()
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"Message": "Error getting books."})
-		} else {
-			c.JSON(http.StatusOK, books)
-		}
-		// user := c.Params.ByISBN("isbn")
-		// value, ok := db[user]
-		// if ok {
-		// 	c.JSON(http.StatusOK, gin.H{"user": user, "value": value})
-		// } else {
-		// 	c.JSON(http.StatusOK, gin.H{"user": user, "status": "no value"})
-		// }
-	})
-
-	// Authorized group (uses gin.BasicAuth() middleware)
-	// Same than:
-	// authorized := r.Group("/")
-	// authorized.Use(gin.BasicAuth(gin.Credentials{
-	//	  "foo":  "bar",
-	//	  "manu": "123",
-	//}))
-	// authorized := r.Group("/", gin.BasicAuth(gin.Accounts{
-	// 	"foo":  "bar", // user:foo password:bar
-	// 	"manu": "123", // user:manu password:123
-	// }))
-
-	/* example curl for /admin with basicauth header
-	   Zm9vOmJhcg== is base64("foo:bar")
-
-		curl -X POST \
-	  	http://localhost:8080/admin \
-	  	-H 'authorization: Basic Zm9vOmJhcg==' \
-	  	-H 'content-type: application/json' \
-	  	-d '{"value":"bar"}'
-	*/
-	// authorized.POST("admin", func(c *gin.Context) {
-	// 	user := c.MustGet(gin.AuthUserKey).(string)
-
-	// 	// Parse JSON
-	// 	var json struct {
-	// 		Value string `json:"value" binding:"required"`
-	// 	}
-
-	// 	if c.Bind(&json) == nil {
-	// 		db[user] = json.Value
-	// 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	// 	}
-	// })
-
+	r.GET("/health_check", healthCheck)
+	r.GET("/books", getBooks)
+	r.POST("/books/", createBook)
+	r.GET("/books/:id", getBook)
+	r.PUT("/books/:id", updateBook)
+	r.DELETE("/books/:id", deleteBook)
 	return r
+}
+
+func healthCheck(c *gin.Context) {
+	c.String(http.StatusOK, "hello from bookbarter!")
+}
+
+// get all books
+func getBooks(c *gin.Context) {
+	books, err := repo.GetAllBooks()
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"Message": "Error getting books."})
+	} else {
+		c.JSON(http.StatusOK, books)
+	}
+}
+
+// create a book
+func createBook(c *gin.Context) {
+	var book model.Book
+	if err := c.ShouldBindJSON(&book); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	repo.Create(book)
+	c.JSON(http.StatusCreated, book)
+}
+
+// get book by ISBN
+func getBook(c *gin.Context) {
+	id := c.Param("id")
+	book, err := repo.GetBook(id)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"Message": "Book not found!"})
+	} else {
+		c.JSON(http.StatusOK, book)
+	}
+}
+
+func updateBook(c *gin.Context) {
+	var book model.Book
+	id := c.Param("id")
+	_, err := repo.GetBook(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "book not found"})
+		return
+	}
+	if err = c.ShouldBindJSON(&book); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err = repo.UpdateBook(book, id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, book)
+}
+
+func deleteBook(c *gin.Context) {
+	id := c.Param("id")
+	_, err := repo.GetBook(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "book not found"})
+		return
+	}
+	repo.DeleteBook(id)
+	c.JSON(http.StatusNoContent, gin.H{})
 }
