@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"strconv"
 
 	"barterbooks/model"
 	"barterbooks/repository"
@@ -52,10 +53,10 @@ func createBook(c *gin.Context) {
 
 // get book by ISBN
 func getBook(c *gin.Context) {
-	id := c.Param("id")
+	id, _ := strconv.Atoi(c.Param("id"))
 	book, err := repo.GetBook(id)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{"Message": "Book not found!"})
+		c.JSON(http.StatusOK, gin.H{"Message": err.Error()})
 	} else {
 		c.JSON(http.StatusOK, book)
 	}
@@ -63,7 +64,7 @@ func getBook(c *gin.Context) {
 
 func updateBook(c *gin.Context) {
 	var book model.Book
-	id := c.Param("id")
+	id, _ := strconv.Atoi(c.Param("id"))
 	_, err := repo.GetBook(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "book not found"})
@@ -81,7 +82,7 @@ func updateBook(c *gin.Context) {
 }
 
 func deleteBook(c *gin.Context) {
-	id := c.Param("id")
+	id, _ := strconv.Atoi(c.Param("id"))
 	_, err := repo.GetBook(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "book not found"})

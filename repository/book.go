@@ -25,13 +25,14 @@ func (r *BookRepository) GetAllBooks() ([]model.Book, error) {
 	return books, err
 }
 
-func (r *BookRepository) GetBook(id string) (model.Book, error) {
-	var books model.Book
-	err := r.conn.Select(&books, "SELECT * FROM books where isbn = $1", id)
-	return books, err
+func (r *BookRepository) GetBook(id int) (model.Book, error) {
+	var book model.Book
+	err := r.conn.Get(&book, "SELECT * FROM books WHERE id = $1", id)
+
+	return book, err
 }
 
-func (r *BookRepository) UpdateBook(book model.Book, id string) error {
+func (r *BookRepository) UpdateBook(book model.Book, id int) error {
 	_, err := r.conn.Exec("UPDATE books SET title = $2, author = $3, isbn = $4 WHERE id = $1",
 		id,
 		book.Title,
@@ -41,7 +42,7 @@ func (r *BookRepository) UpdateBook(book model.Book, id string) error {
 	return err
 }
 
-func (r *BookRepository) DeleteBook(id string) error {
+func (r *BookRepository) DeleteBook(id int) error {
 	_, err := r.conn.Exec("DELETE FROM books WHERE id = $1", id)
 	return err
 }
