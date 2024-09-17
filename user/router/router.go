@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"book/model"
-	"book/repository"
+	"user/model"
+	"user/repository"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
@@ -15,10 +15,10 @@ var repo *repository.UserRepository
 
 func SetupRouter(db *sqlx.DB) *gin.Engine {
 	r := gin.Default()
-	repo = repository.NewBookRepository(db)
+	repo = repository.NewUserRepository(db)
 
 	r.GET("/health_check", healthCheck)
-	r.GET("/users", getusers)
+	r.GET("/users", getUsers)
 	r.POST("/users/", createUser)
 	r.GET("/users/:id", getUser)
 	r.PUT("/users/:id", updateUser)
@@ -30,7 +30,7 @@ func healthCheck(c *gin.Context) {
 	c.String(http.StatusOK, "hello from bookbarter!")
 }
 
-// get all books
+// get all users
 func getUsers(c *gin.Context) {
 	users, err := repo.GetAllUsers()
 	if err != nil {
@@ -54,7 +54,7 @@ func createUser(c *gin.Context) {
 // get user by ID
 func getUser(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	book, err := repo.GetUser(id)
+	user, err := repo.GetUser(id)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{"Message": err.Error()})
 	} else {
@@ -74,7 +74,7 @@ func updateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err = repo.UpdateUser(book, id); err != nil {
+	if err = repo.UpdateUser(user, id); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

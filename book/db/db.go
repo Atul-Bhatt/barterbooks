@@ -36,7 +36,7 @@ func migrateUp(db *sqlx.DB) (*sqlx.DB, error) {
 		return db, err
 	}
 	m, err := migrator.NewWithDatabaseInstance(
-		fmt.Sprintf("file://%s", "./db/migrations"),
+		fmt.Sprintf("file://%s", "../db/migrations"),
 		os.Getenv("POSTGRES_DB"), driver)
 
 	if err != nil {
