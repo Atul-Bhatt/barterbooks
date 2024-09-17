@@ -47,7 +47,10 @@ func createUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	repo.Create(user)
+	if err := repo.Create(user); err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
 	c.JSON(http.StatusCreated, user)
 }
 

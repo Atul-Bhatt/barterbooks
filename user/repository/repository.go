@@ -15,7 +15,7 @@ func NewUserRepository(conn *sqlx.DB) *UserRepository {
 }
 
 func (r *UserRepository) Create(user model.User) error {
-	_, err := r.conn.NamedExec("INSERT INTO users (username, first_name, last_name, role) VALUES (:username, :first_name, :last_name, :role)", user)
+	_, err := r.conn.NamedExec("INSERT INTO users (username, first_name, last_name, user_role) VALUES (:username, :firstname, :lastname, :role)", user)
 	return err
 }
 
