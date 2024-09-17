@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"barterbooks/model"
-	"barterbooks/repository"
+	"book/model"
+	"book/repository"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"

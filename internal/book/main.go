@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"barterbooks/db"
-	"barterbooks/router"
+	"book/db"
+	"book/router"
 
 	"github.com/joho/godotenv"
 )

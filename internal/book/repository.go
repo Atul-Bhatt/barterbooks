@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"barterbooks/model"
+	"book/model"
 
 	"github.com/jmoiron/sqlx"
 )
