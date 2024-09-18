@@ -9,9 +9,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var repo *repository.UserRepository
+
+const HashingCost = 14
 
 func SetupRouter(db *sqlx.DB) *gin.Engine {
 	r := gin.Default()
@@ -23,6 +26,8 @@ func SetupRouter(db *sqlx.DB) *gin.Engine {
 	r.GET("/users/:id", getUser)
 	r.PUT("/users/:id", updateUser)
 	r.DELETE("/users/:id", deleteUser)
+
+	r.POST("login", login)
 	return r
 }
 
@@ -93,4 +98,26 @@ func deleteUser(c *gin.Context) {
 	}
 	repo.DeleteUser(id)
 	c.JSON(http.StatusNoContent, gin.H{})
+}
+
+func login(c *gin.Context) {
+	var creds model.LoginRequest
+
+	if err := c.ShouldBindJSON(&creds); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	hashBytes, hashError := bcrypt.GenerateFromPassword([]byte(creds.Password), HashingCost)
+	if hashError != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": hashError.Error()})
+		return
+	}
+
+	if authError := repo.CheckPassword(creds.Username, string(hashBytes)); authError != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": authError.Error()})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{"Message": "Login successful!"})
 }
