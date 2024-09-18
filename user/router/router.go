@@ -2,12 +2,15 @@ package router
 
 import (
 	"net/http"
+	"os"
 	"strconv"
+	"time"
 
 	"user/model"
 	"user/repository"
 
 	"github.com/gin-gonic/gin"
+	jwt "github.com/golang-jwt/jwt"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -120,4 +123,24 @@ func login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusAccepted, gin.H{"Message": "Login successful!"})
+}
+
+func getJWTToken(user model.User) (string, error) {
+	jwtSecret := os.Getenv("JWT_SECRET")
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	// set claims
+	claims := token.Claims.(jwt.MapClaims)
+	claims["username"] = user.Username
+	claims["firstname"] = user.FirstName
+	claims["lastname"] = user.LastName
+	claims["role"] = user.Role
+	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+
+	// generate encoded token and send it as response
+	t, err := token.SignedString([]byte(jwtSecret))
+	if err != nil {
+		return t, err
+	}
+	return t, nil
 }
