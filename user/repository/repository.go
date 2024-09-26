@@ -33,6 +33,13 @@ func (r *UserRepository) GetUser(id int) (model.User, error) {
 	return user, err
 }
 
+func (r *UserRepository) GetUserByUsername(username string) (model.User, error) {
+	var user model.User
+	err := r.conn.Get(&user, "SELECT * FROM users WHERE username = $1", username)
+
+	return user, err
+}
+
 func (r *UserRepository) UpdateUser(user model.User, id int) error {
 	_, err := r.conn.Exec("UPDATE users SET username = $2, first_name = $3, last_name = $4 user_role = $5 WHERE id = $1",
 		id,

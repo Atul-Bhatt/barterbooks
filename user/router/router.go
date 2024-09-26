@@ -163,7 +163,19 @@ func login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusAccepted, gin.H{"Message": "Login successful!"})
+	user, userErr := repo.GetUserByUsername(creds.Username)
+	if userErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": userErr.Error()})
+		return
+	}
+
+	token, tokenErr := getJWTToken(user)
+	if tokenErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": tokenErr.Error()})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{"token": token})
 }
 
 func getJWTToken(user model.User) (string, error) {
