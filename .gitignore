@@ -1,2 +1,4 @@
 book/.env
 user/.env
+user/build
+book/build

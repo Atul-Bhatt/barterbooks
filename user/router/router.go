@@ -18,6 +18,7 @@ import (
 var repo *repository.UserRepository
 
 const HashingCost = 14
+const userRole = "user"
 
 func SetupRouter(db *sqlx.DB) *gin.Engine {
 	r := gin.Default()
@@ -31,6 +32,7 @@ func SetupRouter(db *sqlx.DB) *gin.Engine {
 	r.DELETE("/users/:id", deleteUser)
 
 	r.POST("login", login)
+	r.POST("signup", signUp)
 	return r
 }
 
@@ -101,6 +103,45 @@ func deleteUser(c *gin.Context) {
 	}
 	repo.DeleteUser(id)
 	c.JSON(http.StatusNoContent, gin.H{})
+}
+
+func signUp(c *gin.Context) {
+	var suPayload model.SignUpRequest
+	var user model.User
+
+	if err := c.ShouldBindJSON(&suPayload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userExists, userExistsErr := repo.UsernameExists(suPayload.Username)
+	if userExistsErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": userExistsErr.Error()})
+		return
+	}
+
+	if userExists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username already exists"})
+		return
+	}
+
+	hashBytes, hashError := bcrypt.GenerateFromPassword([]byte(suPayload.Password), HashingCost)
+	if hashError != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": hashError.Error()})
+		return
+	}
+
+	user.Username = suPayload.Username
+	user.FirstName = suPayload.FirstName
+	user.LastName = suPayload.LastName
+	user.Password = string(hashBytes)
+	user.Role = userRole
+
+	if err := repo.Create(user); err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+	c.JSON(http.StatusCreated, user)
 }
 
 func login(c *gin.Context) {

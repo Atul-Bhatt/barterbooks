@@ -66,3 +66,14 @@ func (r *UserRepository) CheckPassword(username, inputPassword string) error {
 
 	return nil
 }
+
+func (r *UserRepository) UsernameExists(username string) (bool, error) {
+	var count int
+	err := r.conn.Get(&count, "SELECT COUNT(*) FROM users WHERE username = $1", username)
+
+	if count > 0 {
+		return true, err
+	}
+
+	return false, err
+}
