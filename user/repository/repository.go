@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"errors"
 	"user/model"
 
 	"github.com/jmoiron/sqlx"
@@ -63,22 +62,15 @@ func (r *UserRepository) DeleteUser(id int) error {
 	return err
 }
 
-func (r *UserRepository) CheckPassword(username, inputPassword string) error {
+func (r *UserRepository) GetDBPassword(username string) (string, error) {
 	var dbPassword string
-	rows, err := r.conn.Query("SELECT (password) FROM users where username = $1", username)
+
+	err := r.conn.Get(&dbPassword, "SELECT password FROM users where username = $1", username)
 	if err != nil {
-		return err
-	}
-	rows.Next()
-	if scanErr := rows.Scan(&dbPassword); scanErr != nil {
-		return scanErr
+		return dbPassword, err
 	}
 
-	if dbPassword != inputPassword {
-		return errors.New("wrong password")
-	}
-
-	return nil
+	return dbPassword, nil
 }
 
 func (r *UserRepository) UsernameExists(username string) (bool, error) {

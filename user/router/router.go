@@ -152,14 +152,15 @@ func login(c *gin.Context) {
 		return
 	}
 
-	hashBytes, hashError := bcrypt.GenerateFromPassword([]byte(creds.Password), HashingCost)
-	if hashError != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": hashError.Error()})
+	hashedPassword, getPassError := repo.GetDBPassword(creds.Username)
+	if getPassError != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": getPassError.Error()})
 		return
 	}
-
-	if authError := repo.CheckPassword(creds.Username, string(hashBytes)); authError != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": authError.Error()})
+	// compare passwords
+	authError := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(creds.Password))
+	if authError != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "wrong password"})
 		return
 	}
 
