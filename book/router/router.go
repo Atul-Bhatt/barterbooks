@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"book/middleware"
 	"book/model"
 	"book/repository"
 
@@ -14,7 +15,9 @@ import (
 var repo *repository.BookRepository
 
 func SetupRouter(db *sqlx.DB) *gin.Engine {
-	r := gin.Default()
+	r := gin.New()
+	r.Use(middleware.LoggingMiddleware())
+
 	repo = repository.NewBookRepository(db)
 
 	r.GET("/health_check", healthCheck)

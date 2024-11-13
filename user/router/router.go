@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"user/middleware"
 	"user/model"
 	"user/repository"
 
@@ -21,7 +22,8 @@ const HashingCost = 14
 const userRole = "user"
 
 func SetupRouter(db *sqlx.DB) *gin.Engine {
-	r := gin.Default()
+	r := gin.New()
+	r.Use(middleware.LoggingMiddleware())
 	repo = repository.NewUserRepository(db)
 
 	r.GET("/health_check", healthCheck)

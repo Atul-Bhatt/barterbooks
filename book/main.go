@@ -8,9 +8,14 @@ import (
 	"book/router"
 
 	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.InfoLevel)
+
 	// database connection
 	godotenv.Load()
 	connStr := fmt.Sprintf(
@@ -25,7 +30,7 @@ func main() {
 
 	dbConn, err := db.NewDBConnection(connStr)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 	}
 
 	r := router.SetupRouter(dbConn)
