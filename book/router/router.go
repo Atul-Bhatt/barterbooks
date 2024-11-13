@@ -57,10 +57,13 @@ func createBook(c *gin.Context) {
 	validate := validator.New()
 	validationError := validate.Struct(book)
 	if validationError != nil {
+		// get the correlation id of the request
+		correlationID, _ := c.Get("correlationID")
 		log.WithFields(log.Fields{
-			"Method": c.Request.Method,
-			"Path":   c.Request.URL.Path,
-			"Status": c.Writer.Status,
+			"correlationID": correlationID,
+			"Method":        c.Request.Method,
+			"Path":          c.Request.URL.Path,
+			"Status":        c.Writer.Status,
 		}).Error(validationError.Error())
 
 		c.JSON(http.StatusBadRequest, gin.H{"error": validationError.Error()})

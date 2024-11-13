@@ -16,6 +16,7 @@ func LoggingMiddleware() gin.HandlerFunc {
 
 		// generate a correlation ID
 		correlationID := uuid.NewString()
+		c.Set("correlationID", correlationID)
 
 		log.WithFields(log.Fields{
 			"correlationID": correlationID,
