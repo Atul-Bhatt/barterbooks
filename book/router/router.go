@@ -9,7 +9,9 @@ import (
 	"book/repository"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/jmoiron/sqlx"
+	log "github.com/sirupsen/logrus"
 )
 
 var repo *repository.BookRepository
@@ -17,6 +19,8 @@ var repo *repository.BookRepository
 func SetupRouter(db *sqlx.DB) *gin.Engine {
 	r := gin.New()
 	r.Use(middleware.LoggingMiddleware())
+
+	log.SetFormatter(&log.JSONFormatter{})
 
 	repo = repository.NewBookRepository(db)
 
@@ -50,6 +54,19 @@ func createBook(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	validate := validator.New()
+	validationError := validate.Struct(book)
+	if validationError != nil {
+		log.WithFields(log.Fields{
+			"Method": c.Request.Method,
+			"Path":   c.Request.URL.Path,
+			"Status": c.Writer.Status,
+		}).Error(validationError.Error())
+
+		c.JSON(http.StatusBadRequest, gin.H{"error": validationError.Error()})
+		return
+	}
+
 	repo.Create(book)
 	c.JSON(http.StatusCreated, book)
 }
